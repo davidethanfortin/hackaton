@@ -38,8 +38,10 @@ async def generate_query(request: QueryBean):
 
     bedrock_result2 = agentrequest2_service.run_request(requestBean2)
 
+    sql_only = agentrequest2_service.extract_sql_query(bedrock_result2)
+
     # Return combined result
-    return {"agentResult": result, "jsonPath": resultQuery1, "requestAgentResult": bedrock_result2}
+    return {"jsonPath": resultQuery1, "SQLAgentResult": sql_only}
 
 
 @app.get("/")

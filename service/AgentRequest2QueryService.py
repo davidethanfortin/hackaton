@@ -43,3 +43,40 @@ class AgentRequest2QueryService:
             return result
         except Exception as e:
             return f"Error connecting to Bedrock agent: {str(e)}"
+
+    def extract_sql_query(self, query: str) -> str:
+        """
+        Calls connect_bedrock and extracts only the SQL query from the agent response.
+        - Prefers content inside fenced ```sql ... ``` blocks.
+        - Falls back to the first line starting with common SQL keywords.
+        - Returns empty string if no query could be found.
+        """
+        full_text = query
+
+        import re
+        # Try fenced code block with language sql
+        m = re.search(r"```sql\s*(.*?)\s*```", full_text, flags=re.IGNORECASE | re.DOTALL)
+        if m:
+            return m.group(1).strip()
+
+        # Try any fenced code block
+        m2 = re.search(r"```\s*(.*?)\s*```", full_text, flags=re.DOTALL)
+        if m2:
+            block = m2.group(1).strip()
+            # If block looks like SQL, return it
+            if re.search(r"\bSELECT\b|\bUPDATE\b|\bDELETE\b|\bINSERT\b", block, flags=re.IGNORECASE):
+                return block
+
+        # Fallback: find first line that looks like SQL
+        lines = full_text.splitlines()
+        sql_lines = []
+        capture = False
+        for line in lines:
+            if re.search(r"\bSELECT\b|\bUPDATE\b|\bDELETE\b|\bINSERT\b", line, flags=re.IGNORECASE):
+                capture = True
+            if capture:
+                sql_lines.append(line)
+                # Stop when a blank line after capturing
+                if not line.strip():
+                    break
+        return "\n".join(l.strip() for l in sql_lines).strip()
