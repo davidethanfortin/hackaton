@@ -2,6 +2,7 @@ import boto3
 from typing import Optional
 import sys
 from pathlib import Path
+import json
 
 # Ensure parent path so beans package can be imported when running directly
 sys.path.append(str(Path(__file__).parent.parent))
@@ -33,16 +34,15 @@ class RequestQueryService:
             )
 
         try:
-            prompt = (
-                "Please generate the SQL (or data retrieval plan) for the following context: "
-                f"table_name={request.table_name}, json_column={request.json_column}, json_path={request.json_path}. "
-                f"Natural language query: {request.natural_language_query}. "
-                f"Policy types filter: {', '.join(request.policy_types)}."
-            )
-
-            prompt = (
-                "{request.json_path}"
-            )
+            # Build prompt with all parameters as JSON
+            prompt_data = {
+                "table_name": request.table_name,
+                "json_column": request.json_column,
+                "json_path": request.json_path,
+                "natural_language_query": request.natural_language_query,
+                "policy_types": request.policy_types,
+            }
+            prompt = json.dumps(prompt_data, ensure_ascii=False)
 
 
             response = self.bedrock_agent_runtime.invoke_agent(
