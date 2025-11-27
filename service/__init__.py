@@ -1,3 +1,4 @@
 from .AgentQueryService import AgentQueryService
+from .RequestQueryService import RequestQueryService
 
-__all__ = ["AgentQueryService"]
+__all__ = ["AgentQueryService", "RequestQueryService"]
